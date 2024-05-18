@@ -162,4 +162,7 @@ cython_debug/
 /build/
 /data/
 /outputs/
+/models/
+/train/
+/kaggle/
 __pycache__
