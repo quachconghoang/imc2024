@@ -1,0 +1,49 @@
+Bootstrap: docker
+From: nvidia/cuda:11.8.0-devel-ubuntu22.04
+
+%labels
+	MAINTAINER hoangqc
+	WHATAMI Ubuntu 22.04 LTS with GlueFactory
+
+%environment
+	export LANG=en_AU.UTF-8
+	export LANGUAGE=en_AU.UTF-8
+	export LC_TYPE=en_AU.UTF-8
+###	export USER_DATASETS=/projects/hcquach_proj/Datasets/
+###	export USER_SCRATCH=/scratch/hcquach/
+###	export USER_SANDBOX=~/data/Sandbox/
+
+%post
+	mkdir -p /data /projects /scratch
+	apt-get -y update
+	apt-get install -y tar unzip bash-completion build-essential manpages-dev wget bzip2 ca-certificates curl git make gcc
+	apt-get install -y curl grep sed dpkg locales language-pack-en
+	apt-get install -y libceres-dev libceres2 libeigen3-dev cmake
+	apt-get install -y python3 python3-pip python-is-python3
+	python -m pip install --upgrade pip
+
+
+    pip3 install torch==2.1.2+cu118 torchvision==0.16.2+cu118 --extra-index-url https://download.pytorch.org/whl/cu118
+
+### HLOC - COLMAP
+
+    pip3 install kornia kornia-moons kornia-rs pycolmap
+	pip3 install numpy scipy opencv-python
+	pip3 install tqdm matplotlib ipython h5py
+
+### installing python libs
+###	cd home
+###	git clone https://github.com/quachconghoang/Hierarchical-Localization
+###	cd Hierarchical-Localization
+###	python -m pip install -e .
+###	cd ..
+
+### command sandbox:	singularity build --sandbox --fakeroot imc24.def
+### command sif:	    singularity build --fakeroot imc24.sif imc24.def
+### run sandbox shell:	singularity shell --nv imc24.sif
+
+### SINGLE-VGA:
+###### SINGULARITYENV_CUDA_VISIBLE_DEVICES=1 singularity run --nv imc24.sif
+### OR:
+###### export SINGULARITYENV_CUDA_VISIBLE_DEVICES=1
+###### singularity run imc24.sif

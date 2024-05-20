@@ -5,16 +5,16 @@ import kornia as K
 import numpy as np
 import h5py
 
-root_path=Path('Kaggle')
+root_path=Path('/')
 if os.getenv('LOCAL_DATASETS'):
     root_path = Path(os.getenv('LOCAL_DATASETS'))
 
 INPUT_PATH =  root_path / 'kaggle' / 'input'
 WORKING_PATH = root_path / 'kaggle' / 'working'
 DATA_PATH = INPUT_PATH / 'image-matching-challenge-2024'
-# device = K.utils.get_cuda_device_if_available(0)
 
-DEVICE = K.utils.get_cuda_device_if_available(0)
+# device = K.utils.get_cuda_device_if_available(0)
+DEVICE: torch.device = K.utils.get_cuda_device_if_available(0)
 print(DEVICE)
 
 LOCAL_DEBUG = True
