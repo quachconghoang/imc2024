@@ -12,18 +12,16 @@ def image_path_gen(row):
     return row
 
 # def getImageTrainingPaths():
-train_df = pd.read_csv(DATA_PATH / 'train/train_labels.csv')
-train_df = train_df.apply(image_path_gen, axis=1).drop_duplicates(subset=['image_path'])
-G = train_df.groupby(['dataset', 'scene'])['image_path']
-image_paths = []
-for g in G:
-    n = g[1]
-    for image_path in g[1]:
-        image_paths.append(image_path)
-descs = get_global_desc(images_list, model, device=device)
-dm = torch.cdist(descs, descs, p=2).detach().cpu().numpy()
+# train_df = pd.read_csv(DATA_PATH / 'train/train_labels.csv')
+# train_df = train_df.apply(image_path_gen, axis=1).drop_duplicates(subset=['image_path'])
+# G = train_df.groupby(['dataset', 'scene'])['image_path']
+# image_paths = []
+# for g in G:
+#     n = g[1]
+#     for image_path in g[1]:
+#         image_paths.append(image_path)
 
-def createCrossValid(N_SAMPLES = 50):
+def createCrossValid(N_SAMPLES = 50, PERCENT=0.33):
     # os.makedirs(outPath)
     train_df = pd.read_csv(DATA_PATH / 'train/train_labels.csv')
     train_df = train_df.apply(image_path_gen, axis=1).drop_duplicates(subset=['image_path'])
@@ -33,6 +31,11 @@ def createCrossValid(N_SAMPLES = 50):
     image_paths = []
     for g in G:
         n = N_SAMPLES
+        if len(g[1]) > 500:
+            n = int(PERCENT*len(g[1]))
+        if len(g[1]) < N_SAMPLES:
+            n = len(g[1])
+
         n = n if n < len(g[1]) else len(g[1]) # If less than 50 -> Full DB
         g = g[0], g[1].sample(n, random_state=42).reset_index(drop=True)
         for image_path in g[1]:
@@ -47,7 +50,7 @@ def createCrossValid(N_SAMPLES = 50):
     # image_path,dataset,scene,rotation_matrix,translation_vector
 
 
-def generateLocalValidSet():
+def generateLocalValidSet(_test_name = 'test'):
     test_df, img_paths = createCrossValid()
 
     # os.makedirs(WORKING_PATH,exist_ok=True)
@@ -58,10 +61,10 @@ def generateLocalValidSet():
         os.system('cp ' + str(DATA_PATH / img_path) + ' ' + str(WORKING_PATH / img_path))
 
     # change folder ./kaggle/output/train to ./kagge/output/test
-    os.rename(str(WORKING_PATH / 'train'), str(WORKING_PATH / 'test'))
+    os.rename(str(WORKING_PATH / 'train'), str(WORKING_PATH / _test_name))
 
-    test_df['image_path'] = test_df['image_path'].apply(lambda x: x.replace('train', 'test'))
-    test_df.to_csv(WORKING_PATH / 'test/test_gt.csv', index=False)
+    test_df['image_path'] = test_df['image_path'].apply(lambda x: x.replace('train', _test_name))
+    test_df.to_csv(WORKING_PATH / _test_name / 'test_gt.csv', index=False)
 
-
-
+generateLocalValidSet(_test_name='test_0')
+generateLocalValidSet(_test_name='test_1')
