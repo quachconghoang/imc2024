@@ -19,12 +19,9 @@ if os.getenv('LOCAL_DATASETS'):
 
 working_path = root_path+'/kaggle/working/train/'
 
-scenes = ['lizard-night','dioscuri',
-          'church', 'lizard-day',
-          'pond-day', 'temple',
-          'lizard-winter', 'pond-night']
-
-# scene_name = 'lizard-night'
+scenes = ['church', 'dioscuri', 'temple',
+          'lizard-day', 'lizard-night', 'lizard-winter',
+          'pond-day', 'pond-night']
 
 for scene_name in scenes:
     images = Path(working_path + scene_name + '/images')
@@ -33,6 +30,7 @@ for scene_name in scenes:
     sfm_dir = outputs / 'sfm'
     matches = outputs / 'matches.h5'
     loc_pairs = outputs / 'pairs-loc.txt'
+    log_registration = outputs / 'log.txt'
 
     retrieval_conf = extract_features.confs['eigenplaces']
     feature_conf = extract_features.confs['disk']
@@ -49,9 +47,22 @@ for scene_name in scenes:
     references_registered = [model.images[i].name for i in model.reg_image_ids()]
     _unreg = [i for i in os.listdir(images) if i not in references_registered]
 
-    print('-----', scene_name, '-----')
-    print('Registered: \n', references_registered)
-    print('UnReg: \n', _unreg)
+    #Write below text to log.txt
+    with open(log_registration, 'w') as f:
+        f.write(f'SCENE_NAME: {scene_name}\n')
+        f.write(f'num_reg_images: {len(references_registered)}\n')
+        f.write(f'num_cameras: {len(model.images)}\n')
+        f.write(f'num_points3D: {len(model.points3D)}\n')
+        f.write(f'num_observations: {model.compute_num_observations()}\n')
+        f.write(f'mean_track_length: {model.compute_mean_track_length()}\n')
+        f.write(f'mean_observations_per_image: {model.compute_mean_observations_per_reg_image()}\n')
+        f.write(f'mean_reprojection_error: {model.compute_mean_reprojection_error()}\n')
+        f.write(f'num_input_images: {len(os.listdir(images))}\n')
+        f.write(f'unregistered: {_unreg}\n')
+
+    # print('-----', scene_name, '-----')
+    # print('Registered: \n', references_registered)
+    # print('UnReg: \n', _unreg)
 
 
 
