@@ -13,47 +13,57 @@ from hloc import (
     pairs_from_exhaustive
 )
 
-root_path=""
+root_path=''
 if os.getenv('LOCAL_DATASETS'):
     root_path = os.getenv('LOCAL_DATASETS')
 
-working_path = root_path+"/kaggle/working/imc24-hloc/"
+working_path = root_path+'/kaggle/working/train/'
 
-images = Path(working_path+"/lizard/images-day")
-outputs = Path(working_path+"/lizard/hloc/disk-day")
-sfm_pairs = outputs / "pairs-eigenplaces.txt"
-sfm_dir = outputs / "sfm"
-matches = outputs / "matches.h5"
-loc_pairs = outputs / "pairs-loc.txt"
+scenes = ['lizard-night','dioscuri',
+          'church', 'lizard-day',
+          'pond-day', 'temple',
+          'lizard-winter', 'pond-night']
 
-### Church = eigenplaces SP + LG
+# scene_name = 'lizard-night'
 
-### dioscuri = DISK 192/221
-### temple: DISK    70/75
+for scene_name in scenes:
+    images = Path(working_path + scene_name + '/images')
+    outputs = Path(working_path + scene_name + '/hloc/disk')
+    sfm_pairs = outputs / 'pairs-eigenplaces.txt'
+    sfm_dir = outputs / 'sfm'
+    matches = outputs / 'matches.h5'
+    loc_pairs = outputs / 'pairs-loc.txt'
 
-### lizard: DISK Day
-### lizard: DISK Night 193/242
+    retrieval_conf = extract_features.confs['eigenplaces']
+    feature_conf = extract_features.confs['disk']
+    matcher_conf = match_features.confs['disk+lightglue']
 
-### pond:
-### pond:
+    retrieval_path = extract_features.main(retrieval_conf, images, outputs)
+    pairs_from_retrieval.main(retrieval_path, sfm_pairs, num_matched=50)
 
-retrieval_conf = extract_features.confs["eigenplaces"]
-feature_conf = extract_features.confs["disk"]
-matcher_conf = match_features.confs["disk+lightglue"]
-# feature_conf = extract_features.confs["superpoint_aachen"]
-# matcher_conf = match_features.confs["superpoint+lightglue"]
+    feature_path = extract_features.main(feature_conf, images, outputs)
+    match_path = match_features.main(matcher_conf, sfm_pairs, feature_conf["output"], outputs)
 
-retrieval_path = extract_features.main(retrieval_conf, images, outputs)
-pairs_from_retrieval.main(retrieval_path, sfm_pairs, num_matched=50)
+    model = reconstruction.main(sfm_dir, images, sfm_pairs, feature_path, match_path)
 
-feature_path = extract_features.main(feature_conf, images, outputs)
-match_path = match_features.main(matcher_conf, sfm_pairs, feature_conf["output"], outputs)
+    references_registered = [model.images[i].name for i in model.reg_image_ids()]
+    _unreg = [i for i in os.listdir(images) if i not in references_registered]
 
-model = reconstruction.main(sfm_dir, images, sfm_pairs, feature_path, match_path)
+    print('-----', scene_name, '-----')
+    print('Registered: \n', references_registered)
+    print('UnReg: \n', _unreg)
 
-references_registered = [model.images[i].name for i in model.reg_image_ids()]
-unreg = [i for i in os.listdir(images) if i not in references_registered]
 
+
+# DISK
+# num_reg_images = 107
+# num_cameras = 107
+# num_points3D = 38501
+# num_observations = 293705
+# mean_track_length = 7.6285
+# mean_observations_per_image = 2744.91
+# mean_reprojection_error = 0.958783
+# num_input_images = 111
 
 # images_test = Path(working_path+"/church_test/images")
 # references = os.listdir(images)
