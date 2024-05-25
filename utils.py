@@ -14,6 +14,8 @@ import torch.nn.functional as F
 import itertools
 from typing import Any
 
+from config import CONFIG
+from tqdm import tqdm
 
 def arr_to_str(a):
     """Returns ;-separated string representing the input"""
@@ -38,7 +40,7 @@ def embed_images(
 
     embeddings = []
 
-    for i, path in enumerate(paths):
+    for i, path in tqdm(enumerate(paths), desc="Global descriptors"):
         image = load_torch_image(path)
 
         with torch.inference_mode():
@@ -106,6 +108,26 @@ def get_image_pairs(
 
 #####
 #####
+def parse_sample_submission(data_path):
+    data_dict = {}
+    with open(data_path, "r") as f:
+        for i, l in enumerate(f):
+            if i == 0:
+                print("header:", l)
+
+            if l and i > 0:
+                image_path, dataset, scene, _, _ = l.strip().split(',')
+                if dataset not in data_dict:
+                    data_dict[dataset] = {}
+                if scene not in data_dict[dataset]:
+                    data_dict[dataset][scene] = []
+                data_dict[dataset][scene].append(str(CONFIG.base_path) +'/'+ image_path)
+    for dataset in data_dict:
+        for scene in data_dict[dataset]:
+            print(f"{dataset} / {scene} -> {len(data_dict[dataset][scene])} images")
+
+    return data_dict
+
 #####
 
 _EPS = np.finfo(float).eps * 4.0
