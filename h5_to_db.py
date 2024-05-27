@@ -71,7 +71,7 @@ def create_camera(db, image_path, camera_model):
     return db.add_camera(model, width, height, param_arr)
 
 
-def add_keypoints(db, h5_path, image_path, img_ext, camera_model, single_camera=True):
+def add_keypoints(db, h5_path, image_path1, image_path2, orin_image_name, img_ext, camera_model, single_camera=True):
     keypoint_f = h5py.File(os.path.join(h5_path, 'keypoints.h5'), 'r')
 
     camera_id = None
@@ -80,7 +80,10 @@ def add_keypoints(db, h5_path, image_path, img_ext, camera_model, single_camera=
         keypoints = keypoint_f[filename][()]
 
         fname_with_ext = filename  # + img_ext
-        path = os.path.join(image_path, fname_with_ext)
+        if filename in orin_image_name:
+            path = os.path.join(image_path1, fname_with_ext)
+        else:
+            path = os.path.join(image_path2, fname_with_ext)
         if not os.path.isfile(path):
             raise IOError(f'Invalid image path {path}')
 

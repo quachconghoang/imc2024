@@ -121,12 +121,59 @@ def parse_sample_submission(data_path):
                     data_dict[dataset] = {}
                 if scene not in data_dict[dataset]:
                     data_dict[dataset][scene] = []
-                data_dict[dataset][scene].append(str(CONFIG.base_path) +'/'+ image_path)
+                data_dict[dataset][scene].append(Path(CONFIG.base_path / image_path))
     for dataset in data_dict:
         for scene in data_dict[dataset]:
             print(f"{dataset} / {scene} -> {len(data_dict[dataset][scene])} images")
 
     return data_dict
+
+
+def create_submission(
+        results: dict,
+        data_dict: dict[dict[str, list[Path]]],
+        base_path: Path,
+        orin_image_path
+) -> None:
+    """Prepares a submission file."""
+
+    with open( "tmp_submission.csv", "w") as f:
+        f.write("image_path,dataset,scene,rotation_matrix,translation_vector\n")
+
+        for dataset in data_dict:
+            # Only write results for datasets with images that have results
+            if dataset in results:
+                res = results[dataset]
+            else:
+                res = {}
+
+            # Same for scenes
+            for scene in data_dict[dataset]:
+                if scene in res:
+                    scene_res = res[scene]
+                else:
+                    scene_res = {"R": {}, "t": {}}
+                scene_res_2 = {}
+                for skey in scene_res.keys():
+                    idx = str(skey).find("test")
+
+                    skey2 = str(skey.relative_to(base_path))
+                    scene_res_2[skey2] = scene_res[skey]
+
+                # Write the row with rotation and translation matrices
+                for image in data_dict[dataset][scene]:
+                    image = str(image)
+                    idx = image.find("test")
+                    image = image[idx:]
+                    if image in scene_res_2:
+                        print(image)
+                        R = scene_res_2[image]["R"].reshape(-1)
+                        T = scene_res_2[image]["t"].reshape(-1)
+                    else:
+                        R = np.eye(3).reshape(-1)
+                        T = np.zeros((3))
+                    if image in orin_image_path:
+                        f.write(f"{image},{dataset},{scene},{arr_to_str(R)},{arr_to_str(T)}\n")
 
 #####
 

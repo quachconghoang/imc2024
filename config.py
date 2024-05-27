@@ -31,17 +31,18 @@ print(DEVICE)
 class CONFIG:
     base_path: Path = IMC_PATH
     feature_dir: Path = WORKING_PATH / "feature_outputs"
+    # feature_dir: Path = Path.cwd() / ".feature_outputs"
     device: torch.device = K.utils.get_cuda_device_if_available(0)
     embed_model = str(INPUT_PATH) + "/dinov2/pytorch/base/1"
 
-    # pair_matching_args = {
-    #     "model_name": str(INPUT_PATH) + "/dinov2/pytorch/base/1",
-    #     "similarity_threshold": 0.6,
-    #     "tolerance": 500,
-    #     "min_matches": 100,
-    #     "exhaustive_if_less": 50,
-    #     "p": 2.0,
-    # }
+    pair_matching_args = {
+        "model_name": str(INPUT_PATH) + "/dinov2/pytorch/base/1",
+        "similarity_threshold": 0.6,
+        "tolerance": 500,
+        "min_matches": 100,
+        "exhaustive_if_less": 50,
+        "p": 2.0,
+    }
 
     # COLMAP Reconstruction
     CAMERA_MODEL = "simple-radial"
@@ -51,15 +52,31 @@ class CONFIG:
     # scene_check
     scene_aliasing = False
     # Keypoints Extraction Parameters
-    params_aliked_lightglue = {
+
+    keypoint_detection_args = {
         "num_features": 4096,
-        "detection_threshold": 0.001,
-        "min_matches": 15,
         "resize_to": 1024,
     }
-    params_superpoint_lightglue = {
-        "num_features": 4096,
-        "detection_threshold": 0.005,
+
+    keypoint_distances_args = {
         "min_matches": 15,
-        "resize_to": 1024,
+        "verbose": False,
     }
+
+    colmap_mapper_options = {
+        "min_model_size": 3, # By default colmap does not generate a reconstruction if less than 10 images are registered. Lower it to 3.
+        "max_num_models": 2,
+    }
+
+    # params_aliked_lightglue = {
+    #     "num_features": 4096,
+    #     "detection_threshold": 0.001,
+    #     "min_matches": 15,
+    #     "resize_to": 1024,
+    # }
+    # params_superpoint_lightglue = {
+    #     "num_features": 4096,
+    #     "detection_threshold": 0.005,
+    #     "min_matches": 15,
+    #     "resize_to": 1024,
+    # }

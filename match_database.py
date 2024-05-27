@@ -69,40 +69,42 @@ class CustomDB:
         return match_dataset
 
 
-# 4. Read sample submission and querry.
-db_custom = CustomDB()
-db_custom.createFromPath(db_custom_path=CUSTOM_PATH)
 
-test_dict = {}
-test_dict = parse_sample_submission(IMC_PATH / 'sample_submission.csv')
-out_results = {}
 
-datasets = []
-for dataset in test_dict:
-    datasets.append(dataset)
-
-test_embeddings_dict = {}
-for dataset in test_dict:
-    print(dataset)
-    if dataset not in out_results:
-        out_results[dataset] = {}
-    for scene in test_dict[dataset]:
-        print(scene)
-        img_dir = os.path.join(CONFIG.base_path, '/'.join(test_dict[dataset][scene][0].split('/')[:-1]))
-        print(img_dir)
-        try:
-            out_results[dataset][scene] = {}
-            img_fnames = [os.path.join(CONFIG.base_path, x) for x in test_dict[dataset][scene]]
-            print(f"Got {len(img_fnames)} images")
-            scene_embeddings = embed_images(paths=img_fnames, model_name=CONFIG.embed_model, device=CONFIG.device)
-            test_embeddings_dict.update({dataset: {scene: scene_embeddings}})
-
-        except Exception as e:
-            print(e)
-            pass
-
-for dataset in test_dict:
-    for scene in test_dict[dataset]:
-        test_embedding = test_embeddings_dict[dataset][scene]
-        match_dataset_custom = db_custom.checkDesc(test_embedding)
-        print(dataset, ' : ', match_dataset_custom)
+# # 4. Read sample submission and querry.
+# db_custom = CustomDB()
+# db_custom.createFromPath(db_custom_path=CUSTOM_PATH)
+#
+# test_dict = {}
+# test_dict = parse_sample_submission(IMC_PATH / 'sample_submission.csv')
+# out_results = {}
+#
+# datasets = []
+# for dataset in test_dict:
+#     datasets.append(dataset)
+#
+# test_embeddings_dict = {}
+# for dataset in test_dict:
+#     print(dataset)
+#     if dataset not in out_results:
+#         out_results[dataset] = {}
+#     for scene in test_dict[dataset]:
+#         print(scene)
+#         img_dir = os.path.join(CONFIG.base_path, '/'.join(test_dict[dataset][scene][0].split('/')[:-1]))
+#         print(img_dir)
+#         try:
+#             out_results[dataset][scene] = {}
+#             img_fnames = [os.path.join(CONFIG.base_path, x) for x in test_dict[dataset][scene]]
+#             print(f"Got {len(img_fnames)} images")
+#             scene_embeddings = embed_images(paths=img_fnames, model_name=CONFIG.embed_model, device=CONFIG.device)
+#             test_embeddings_dict.update({dataset: {scene: scene_embeddings}})
+#
+#         except Exception as e:
+#             print(e)
+#             pass
+#
+# for dataset in test_dict:
+#     for scene in test_dict[dataset]:
+#         test_embedding = test_embeddings_dict[dataset][scene]
+#         match_dataset_custom = db_custom.checkDesc(test_embedding)
+#         print(dataset, ' : ', match_dataset_custom)
