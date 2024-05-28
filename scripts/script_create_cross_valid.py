@@ -10,13 +10,15 @@ if os.getenv('LOCAL_DATASETS'):
 
 INPUT_PATH =  root_path / 'kaggle' / 'input'
 WORKING_PATH = root_path / 'kaggle' / 'working'
+
+# CUSTOM_PATH = INPUT_PATH / 'imc24-custom'
 CUSTOM_PATH = WORKING_PATH / 'imc24-custom'
 
 MIN_SAMPLES = 50
-PERCENT=0.25
+PERCENT=0.33
 white_list =[
-    'church',
-    # 'dioscuri',
+    # 'church',
+    'dioscuri',
     # 'lizard',
     # 'multi-temporal-temple-baalshamin',
     # 'pond',

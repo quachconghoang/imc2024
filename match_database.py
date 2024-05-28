@@ -1,4 +1,4 @@
-import os
+import os, shutil
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -9,6 +9,18 @@ from config import *
 from utils import parse_sample_submission
 from utils import embed_images
 from sklearn.cluster import KMeans
+
+from hloc.localize_sfm import QueryLocalizer, pose_from_cluster
+from pycolmap import Reconstruction
+
+from hloc import (
+    extract_features,
+    match_features,
+    reconstruction,
+    visualization,
+    pairs_from_retrieval,
+    pairs_from_exhaustive
+)
 
 class CustomDB:
     def __init__(self):
@@ -28,6 +40,7 @@ class CustomDB:
                 img_paths = [os.path.join(CUSTOM_PATH, dataset, 'images', x) for x in self.img_names[dataset]]
                 self.img_paths[dataset] = img_paths
             self.db_embeddings = np.load(db_custom_path / 'embeddings_dict.npy', allow_pickle=True).item()
+            return
 
 
         for dataset in self.datasets:
@@ -68,8 +81,73 @@ class CustomDB:
         match_dataset = min(dis_mean, key=lambda k: dis_mean[k][0])
         return match_dataset
 
+class CustomHLOC:
+    def __init__(self):
+        self.available_dataset = ['church', 'dioscuri', 'temple',
+                                # 'lizard-day', 'lizard-night', 'lizard-winter',
+                                # 'pond-day', 'pond-night',
+                                # 'transp_obj_glass_cup', 'transp_obj_glass_cylinder'
+                                  ]
+
+        self.source_dir = CUSTOM_PATH
+        self.base_dir = WORKING_PATH / 'hloc-cache'
+        self.retrieval_conf = extract_features.confs['eigenplaces']
+        self.feature_conf = extract_features.confs['disk']
+        self.matcher_conf = match_features.confs['disk+lightglue']
+
+        # copy all subfolder of source dir to base dir if not available
+        for scene in self.available_dataset:
+            source_dir = self.source_dir/scene
+            target_dir = self.base_dir/scene
+            if source_dir.exists() & (target_dir.exists()==False):
+                # copy source_dir to target_dir
+                print('Copy scene ', scene, ' to cache folder')
+                shutil.copytree(source_dir, target_dir)
+                ...
 
 
+
+    def prepareMap(self, map_name):
+
+        if not map_name in self.available_dataset:
+            print('There is no map for scene: ', map_name)
+            return
+
+        self.images = self.base_dir / map_name / 'images'
+        self.outputs = self.base_dir /map_name / 'hloc' / 'disk'
+        self.sfm_pairs = outputs / 'pairs-eigenplaces.txt'
+        self.sfm_dir = outputs / 'sfm'
+        self.matches = outputs / 'matches.h5'
+        self.loc_pairs = outputs / 'pairs-loc.txt'
+        self.log_registration = outputs / 'log.txt'
+
+        self.feature_path = outputs/'feats-disk.h5'
+        self.match_path = outputs/'feats-disk_matches-disk-lightglue_pairs-eigenplaces.h5'
+
+        self.model = Reconstruction(sfm_dir)
+
+
+hloc_loader = CustomHLOC()
+
+working_path = IMC_PATH/'train'
+scene_name = 'church'
+images = working_path / scene_name / 'images'
+outputs = working_path / scene_name / 'hloc' / 'disk'
+sfm_pairs = outputs / 'pairs-eigenplaces.txt'
+sfm_dir = outputs / 'sfm'
+matches = outputs / 'matches.h5'
+loc_pairs = outputs / 'pairs-loc.txt'
+log_registration = outputs / 'log.txt'
+
+retrieval_conf = extract_features.confs['eigenplaces']
+feature_conf = extract_features.confs['disk']
+matcher_conf = match_features.confs['disk+lightglue']
+
+# retrieval_path = extract_features.main(retrieval_conf, images, outputs)
+# pairs_from_retrieval.main(retrieval_path, sfm_pairs, num_matched=50)
+feature_path = outputs / 'feats-disk.h5'
+match_path = outputs / 'feats-disk_matches-disk-lightglue_pairs-eigenplaces.h5'
+model = Reconstruction(sfm_dir)
 
 # # 4. Read sample submission and querry.
 # db_custom = CustomDB()

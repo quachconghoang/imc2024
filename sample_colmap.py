@@ -12,7 +12,7 @@ from copy import deepcopy
 import pycolmap
 import torch
 from lightglue import match_pair
-from lightglue import LightGlue, ALIKED
+from lightglue import LightGlue, ALIKED, DISK
 from lightglue.utils import load_image, rbd
 
 from config import *

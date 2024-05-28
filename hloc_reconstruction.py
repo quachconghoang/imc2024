@@ -17,7 +17,7 @@ root_path=''
 if os.getenv('LOCAL_DATASETS'):
     root_path = os.getenv('LOCAL_DATASETS')
 
-working_path = root_path+'/kaggle/working/train/'
+working_path = root_path+'/kaggle/working/imc24-custom/train/'
 
 scenes = ['church', 'dioscuri', 'temple',
           'lizard-day', 'lizard-night', 'lizard-winter',
@@ -42,7 +42,8 @@ for scene_name in scenes:
     feature_path = extract_features.main(feature_conf, images, outputs)
     match_path = match_features.main(matcher_conf, sfm_pairs, feature_conf["output"], outputs)
 
-    model = reconstruction.main(sfm_dir, images, sfm_pairs, feature_path, match_path)
+    # model = reconstruction.main(sfm_dir, images, sfm_pairs, feature_path, match_path)
+    model = pycolmap.Reconstruction(sfm_dir)
 
     references_registered = [model.images[i].name for i in model.reg_image_ids()]
     _unreg = [i for i in os.listdir(images) if i not in references_registered]
