@@ -95,6 +95,7 @@ class CustomHLOC:
         self.feature_conf = extract_features.confs['disk']
         self.matcher_conf = match_features.confs['disk+lightglue']
 
+
         # copy all subfolder of source dir to base dir if not available
         for scene in self.available_dataset:
             source_dir = self.source_dir/scene
@@ -115,74 +116,52 @@ class CustomHLOC:
 
         self.images = self.base_dir / map_name / 'images'
         self.outputs = self.base_dir /map_name / 'hloc' / 'disk'
-        self.sfm_pairs = outputs / 'pairs-eigenplaces.txt'
-        self.sfm_dir = outputs / 'sfm'
-        self.matches = outputs / 'matches.h5'
-        self.loc_pairs = outputs / 'pairs-loc.txt'
-        self.log_registration = outputs / 'log.txt'
+        self.sfm_pairs = self.outputs / 'pairs-eigenplaces.txt'
+        self.sfm_dir = self.outputs / 'sfm'
+        self.matches = self.outputs / 'matches.h5'
+        self.loc_pairs = self.outputs / 'pairs-loc.txt'
+        self.log_registration = self.outputs / 'log.txt'
 
-        self.feature_path = outputs/'feats-disk.h5'
-        self.match_path = outputs/'feats-disk_matches-disk-lightglue_pairs-eigenplaces.h5'
+        self.feature_path = self.outputs/'feats-disk.h5'
+        self.match_path = self.outputs/'feats-disk_matches-disk-lightglue_pairs-eigenplaces.h5'
 
-        self.model = Reconstruction(sfm_dir)
+        self.model = Reconstruction(self.sfm_dir)
 
 
-hloc_loader = CustomHLOC()
+# 4. Read sample submission and querry.
+db_custom = CustomDB()
+db_custom.createFromPath(db_custom_path=CUSTOM_PATH)
 
-working_path = IMC_PATH/'train'
-scene_name = 'church'
-images = working_path / scene_name / 'images'
-outputs = working_path / scene_name / 'hloc' / 'disk'
-sfm_pairs = outputs / 'pairs-eigenplaces.txt'
-sfm_dir = outputs / 'sfm'
-matches = outputs / 'matches.h5'
-loc_pairs = outputs / 'pairs-loc.txt'
-log_registration = outputs / 'log.txt'
+test_dict = {}
+test_dict = parse_sample_submission(WORKING_PATH / 'sample_submission.csv')
+out_results = {}
 
-retrieval_conf = extract_features.confs['eigenplaces']
-feature_conf = extract_features.confs['disk']
-matcher_conf = match_features.confs['disk+lightglue']
+datasets = []
+for dataset in test_dict:
+    datasets.append(dataset)
 
-# retrieval_path = extract_features.main(retrieval_conf, images, outputs)
-# pairs_from_retrieval.main(retrieval_path, sfm_pairs, num_matched=50)
-feature_path = outputs / 'feats-disk.h5'
-match_path = outputs / 'feats-disk_matches-disk-lightglue_pairs-eigenplaces.h5'
-model = Reconstruction(sfm_dir)
+test_embeddings_dict = {}
+for dataset in test_dict:
+    print(dataset)
+    if dataset not in out_results:
+        out_results[dataset] = {}
+    for scene in test_dict[dataset]:
+        print(scene)
+        img_dir = os.path.join(CONFIG.base_path, '/'.join(str(test_dict[dataset][scene][0]).split('/')[:-1]))
+        print(img_dir)
+        try:
+            out_results[dataset][scene] = {}
+            img_fnames = [os.path.join(CONFIG.base_path, x) for x in test_dict[dataset][scene]]
+            print(f"Got {len(img_fnames)} images")
+            scene_embeddings = embed_images(paths=img_fnames, model_name=CONFIG.embed_model, device=CONFIG.device)
+            test_embeddings_dict.update({dataset: {scene: scene_embeddings}})
 
-# # 4. Read sample submission and querry.
-# db_custom = CustomDB()
-# db_custom.createFromPath(db_custom_path=CUSTOM_PATH)
-#
-# test_dict = {}
-# test_dict = parse_sample_submission(IMC_PATH / 'sample_submission.csv')
-# out_results = {}
-#
-# datasets = []
-# for dataset in test_dict:
-#     datasets.append(dataset)
-#
-# test_embeddings_dict = {}
-# for dataset in test_dict:
-#     print(dataset)
-#     if dataset not in out_results:
-#         out_results[dataset] = {}
-#     for scene in test_dict[dataset]:
-#         print(scene)
-#         img_dir = os.path.join(CONFIG.base_path, '/'.join(test_dict[dataset][scene][0].split('/')[:-1]))
-#         print(img_dir)
-#         try:
-#             out_results[dataset][scene] = {}
-#             img_fnames = [os.path.join(CONFIG.base_path, x) for x in test_dict[dataset][scene]]
-#             print(f"Got {len(img_fnames)} images")
-#             scene_embeddings = embed_images(paths=img_fnames, model_name=CONFIG.embed_model, device=CONFIG.device)
-#             test_embeddings_dict.update({dataset: {scene: scene_embeddings}})
-#
-#         except Exception as e:
-#             print(e)
-#             pass
-#
-# for dataset in test_dict:
-#     for scene in test_dict[dataset]:
-#         test_embedding = test_embeddings_dict[dataset][scene]
-#         match_dataset_custom = db_custom.checkDesc(test_embedding)
-#         print(dataset, ' : ', match_dataset_custom)
+        except Exception as e:
+            print(e)
+            pass
+
+for dataset in test_dict:
+    for scene in test_dict[dataset]:
+        test_embedding = test_embeddings_dict[dataset][scene]
+        match_dataset_custom = db_custom.checkDesc(test_embedding)
+        print(dataset, ' : ', match_dataset_custom)
