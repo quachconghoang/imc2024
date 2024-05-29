@@ -38,7 +38,13 @@ def import_into_colmap(
 ### check submission
 sample_path = IMC_PATH/'sample_submission.csv'
 if LOCAL_DEBUG:
+    # copy to new place
+    shutil.copy(CUSTOM_PATH/'sample_submission.csv', WORKING_PATH/'sample_submission.csv')
+    shutil.copy(CUSTOM_PATH / 'test_gt.csv', WORKING_PATH / 'test_gt.csv')
     sample_path = WORKING_PATH/'sample_submission.csv'
+else:
+    shutil.copy(IMC_PATH / 'sample_submission.csv', WORKING_PATH / 'sample_submission.csv')
+
 
 
 user_df = pd.read_csv(sample_path)

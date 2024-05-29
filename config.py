@@ -16,11 +16,12 @@ LOCAL_DEBUG = True
 SUBMISSION = False
 
 IMC_PATH = INPUT_PATH / 'image-matching-challenge-2024'
-CUSTOM_PATH = INPUT_PATH / 'imc24-custom' / 'train'
+CUSTOM_PATH = INPUT_PATH / 'imc24-custom'
+CUSTOM_TRAIN = INPUT_PATH / 'imc24-custom' / 'train'
 
-if LOCAL_DEBUG:
-    IMC_PATH = WORKING_PATH / 'imc24-custom'
-    CUSTOM_PATH = WORKING_PATH / 'imc24-custom' / 'train'
+# if LOCAL_DEBUG:
+    # IMC_PATH = WORKING_PATH / 'imc24-custom'
+    # CUSTOM_PATH = WORKING_PATH / 'imc24-custom' / 'train'
 
 # device = K.utils.get_cuda_device_if_available(0)
 DEVICE: torch.device = K.utils.get_cuda_device_if_available(0)
@@ -54,7 +55,7 @@ class CONFIG:
     # Keypoints Extraction Parameters
 
     keypoint_detection_args = {
-        "num_features": 4096,
+        "num_features": 8192,
         "resize_to": 1024,
     }
 

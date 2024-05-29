@@ -11,17 +11,17 @@ if os.getenv('LOCAL_DATASETS'):
 INPUT_PATH =  root_path / 'kaggle' / 'input'
 WORKING_PATH = root_path / 'kaggle' / 'working'
 
-# CUSTOM_PATH = INPUT_PATH / 'imc24-custom'
-CUSTOM_PATH = WORKING_PATH / 'imc24-custom'
+CUSTOM_PATH = INPUT_PATH / 'imc24-custom'
+# CUSTOM_PATH = WORKING_PATH / 'imc24-custom'
 
-MIN_SAMPLES = 221
-PERCENT=0.33
+MIN_SAMPLES = 50
+PERCENT= 1
 white_list =[
     # 'church',
-    'dioscuri',
+    # 'dioscuri',
     # 'lizard',
     # 'multi-temporal-temple-baalshamin',
-    # 'pond',
+    'pond',
     # 'transp_obj_glass_cup',
     # 'transp_obj_glass_cylinder'
              ]
@@ -30,7 +30,7 @@ def image_test_path_gen(row):
     row['image_path'] = 'test/' + row['dataset'] + '/images/' + row['image_name']
     return row
 
-train_df = pd.read_csv(CUSTOM_PATH / 'test/test_labels.csv')
+train_df = pd.read_csv(CUSTOM_PATH / 'test/test_labels_night.csv')
 train_df = train_df.apply(image_test_path_gen, axis=1).drop_duplicates(subset=['image_path'])
 
 # categories = pd.read_csv(data_path / 'train/categories.csv')
@@ -54,7 +54,7 @@ for g in G:
 
 gt_df = train_df[train_df.image_path.isin(image_paths)].reset_index(drop=True)
 pred_df = gt_df[['image_path', 'dataset', 'scene', 'rotation_matrix', 'translation_vector']]
-pred_df.to_csv(WORKING_PATH/'test_gt.csv', index=False)
+
 
 ### dupilcate pred_df to create sample_submission
 sub_df = pred_df.copy()
@@ -64,4 +64,9 @@ dump_translation = np.zeros(3)
 sub_df['rotation_matrix'] = [f"{';'.join([str(x) for x in dump_rotation])}"] * len(sub_df)
 sub_df['translation_vector'] = [f"{';'.join([str(x) for x in dump_translation])}"] * len(sub_df)
 
-sub_df.to_csv(WORKING_PATH/'sample_submission.csv', index=False)
+if os.getenv('LOCAL_DATASETS'):
+    pred_df.to_csv(CUSTOM_PATH/'test_gt.csv', index=False)
+    sub_df.to_csv(CUSTOM_PATH/'sample_submission.csv', index=False)
+else:
+    pred_df.to_csv(WORKING_PATH/'test_gt.csv', index=False)
+    sub_df.to_csv(WORKING_PATH/'sample_submission.csv', index=False)

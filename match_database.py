@@ -34,10 +34,10 @@ class CustomDB:
 
     def createFromPath(self, db_custom_path: Path):
         ### check tmp file is available
-        if os.path.exists(CUSTOM_PATH / 'db_img_names.npy') & os.path.exists(CUSTOM_PATH / 'embeddings_dict.npy'):
+        if os.path.exists(CUSTOM_TRAIN / 'db_img_names.npy') & os.path.exists(CUSTOM_TRAIN / 'embeddings_dict.npy'):
             self.img_names = np.load(db_custom_path / 'db_img_names.npy', allow_pickle=True).item()
             for dataset in self.datasets:
-                img_paths = [os.path.join(CUSTOM_PATH, dataset, 'images', x) for x in self.img_names[dataset]]
+                img_paths = [os.path.join(CUSTOM_TRAIN, dataset, 'images', x) for x in self.img_names[dataset]]
                 self.img_paths[dataset] = img_paths
             self.db_embeddings = np.load(db_custom_path / 'embeddings_dict.npy', allow_pickle=True).item()
             return
@@ -49,7 +49,7 @@ class CustomDB:
             self.img_names[dataset] = img_names
 
         for dataset in self.datasets:
-            img_paths = [os.path.join(CUSTOM_PATH, dataset, 'images', x) for x in self.img_names[dataset]]
+            img_paths = [os.path.join(CUSTOM_TRAIN, dataset, 'images', x) for x in self.img_names[dataset]]
             self.img_paths[dataset] = img_paths
 
         for dataset in self.datasets:
@@ -57,8 +57,8 @@ class CustomDB:
             embeddings = embed_images(paths=path_list, model_name=CONFIG.embed_model, device=CONFIG.device)
             self.db_embeddings[dataset] = embeddings
 
-        np.save(CUSTOM_PATH / 'db_img_names.npy', self.img_names)
-        np.save(CUSTOM_PATH / 'embeddings_dict.npy', self.db_embeddings)
+        np.save(CUSTOM_TRAIN / 'db_img_names.npy', self.img_names)
+        np.save(CUSTOM_TRAIN / 'embeddings_dict.npy', self.db_embeddings)
 
 
     def checkDesc(self, input_embeddings):
@@ -89,7 +89,7 @@ class CustomHLOC:
                                 # 'transp_obj_glass_cup', 'transp_obj_glass_cylinder'
                                   ]
 
-        self.source_dir = CUSTOM_PATH
+        self.source_dir = CUSTOM_TRAIN
         self.base_dir = WORKING_PATH / 'hloc-cache'
         self.retrieval_conf = extract_features.confs['eigenplaces']
         self.feature_conf = extract_features.confs['disk']
@@ -130,7 +130,7 @@ class CustomHLOC:
 
 # 4. Read sample submission and querry.
 db_custom = CustomDB()
-db_custom.createFromPath(db_custom_path=CUSTOM_PATH)
+db_custom.createFromPath(db_custom_path=CUSTOM_TRAIN)
 
 test_dict = {}
 test_dict = parse_sample_submission(WORKING_PATH / 'sample_submission.csv')

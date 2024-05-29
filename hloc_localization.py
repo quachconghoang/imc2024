@@ -32,7 +32,7 @@ if LOCAL_DEBUG:
     sample_path = WORKING_PATH/'sample_submission.csv'
 
 db_custom = CustomDB()
-db_custom.createFromPath(db_custom_path=CUSTOM_PATH)
+db_custom.createFromPath(db_custom_path=CUSTOM_TRAIN)
 
 test_dict = {}
 test_dict = parse_sample_submission(sample_path)
@@ -46,7 +46,7 @@ for dataset in test_dict:
     datasets.append(dataset)
 
 working_path = WORKING_PATH / 'hloc-cache'
-scene_name = 'church'
+scene_name = 'pond-night'
 images_dir = working_path / scene_name / 'images'
 # queries_dir = working_path / scene_name / 'queries'
 outputs = working_path / scene_name / 'hloc' / 'disk'
@@ -66,8 +66,8 @@ model = Reconstruction(sfm_dir)
 # model = reconstruction.main(sfm_dir, images_dir, sfm_pairs, feature_path, match_path)
 
 test_embeddings_dict = {}
-dataset = 'church'
-scene = 'church'
+dataset = 'pond'
+scene = 'pond'
 
 ### get name in querry list
 import pycolmap
