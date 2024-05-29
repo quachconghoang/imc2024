@@ -1,9 +1,10 @@
 from pathlib import Path
-import os
+import os, shutil, time
 import matplotlib.pyplot as plt
 
 from config import *
 from utils import *
+from copy import deepcopy
 from matcher import keypoint_distances, detect_keypoints
 
 from hloc.localize_sfm import QueryLocalizer, pose_from_cluster
@@ -16,6 +17,7 @@ from hloc import (
     pairs_from_retrieval,
     pairs_from_exhaustive
 )
+
 
 
 import torch
@@ -35,6 +37,9 @@ db_custom.createFromPath(db_custom_path=CUSTOM_PATH)
 test_dict = {}
 test_dict = parse_sample_submission(sample_path)
 out_results = {}
+
+user_df = pd.read_csv(sample_path)
+orin_image_path = user_df['image_path'].to_list()
 
 datasets = []
 for dataset in test_dict:
@@ -61,8 +66,8 @@ model = Reconstruction(sfm_dir)
 # model = reconstruction.main(sfm_dir, images_dir, sfm_pairs, feature_path, match_path)
 
 test_embeddings_dict = {}
-dataset = 'dioscuri'
-scene = 'dioscuri'
+dataset = 'church'
+scene = 'church'
 
 ### get name in querry list
 import pycolmap
@@ -85,13 +90,39 @@ conf = {
 
 ref_ids = [model.find_image_with_name(n).image_id for n in references_registered]
 
+results = {}
+results[dataset] = {}
+results[dataset][scene] = {}
+
 poses = []
 for img in query:
     camera = pycolmap.infer_camera_from_image(img_dir / img)
     localizer = QueryLocalizer(model, conf)
     ret, log = pose_from_cluster(localizer, img, camera, ref_ids, feature_path, matches)
     print(img,ret["cam_from_world"])
+    key = CONFIG.base_path / "test" / scene / "images" / img
+    results[dataset][scene][key] = {}
+    results[dataset][scene][key]["R"] = deepcopy(ret["cam_from_world"].rotation.matrix())
+    results[dataset][scene][key]["t"] = deepcopy(np.array(ret["cam_from_world"].translation))
     # poses.append(ret["cam_from_world"])
+
+create_submission(results, test_dict, CONFIG.base_path, orin_image_path)
+shutil.copy('tmp_submission.csv', WORKING_PATH / 'submission.csv')
+
+trans = np.eye(4)
+trans[:3, -1] = [0, 0, 0]
+gt_csv = WORKING_PATH / 'test_gt.csv'
+user_csv = WORKING_PATH / 'submission.csv'
+gt_df = pd.read_csv(gt_csv).sort_values(by='image_path')
+user_df = pd.read_csv(user_csv)
+# user_df['image_path'] = user_df['image_path'].apply(lambda x: os.path.basename(x))
+# user_df = user_df.head(41)
+user_df = user_df.sort_values(by='image_path')
+start = time.time()
+res = score(gt_df, user_df)
+end = time.time()
+print(f"\nGlobal mAA: {res * 100}%")
+print("Total running time: %s" % (end - start))
 
 # test_embeddings_dict = {}
 # for dataset in test_dict:
