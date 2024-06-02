@@ -38,10 +38,10 @@ class CONFIG:
 
     pair_matching_args = {
         "model_name": str(INPUT_PATH) + "/dinov2/pytorch/base/1",
-        "similarity_threshold": 0.6,
+        "similarity_threshold": 0.5,
         "tolerance": 500,
         "min_matches": 100,
-        "exhaustive_if_less": 50,
+        "exhaustive_if_less": 20,
         "p": 2.0,
     }
 

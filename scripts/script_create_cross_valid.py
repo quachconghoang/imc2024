@@ -15,13 +15,13 @@ CUSTOM_PATH = INPUT_PATH / 'imc24-custom'
 # CUSTOM_PATH = WORKING_PATH / 'imc24-custom'
 
 MIN_SAMPLES = 50
-PERCENT= 1
+PERCENT= 0.1
 white_list =[
-    # 'church',
-    # 'dioscuri',
+    'church',
+    'dioscuri',
     # 'lizard',
     # 'multi-temporal-temple-baalshamin',
-    'pond',
+    # 'pond',
     # 'transp_obj_glass_cup',
     # 'transp_obj_glass_cylinder'
              ]
@@ -67,6 +67,8 @@ sub_df['translation_vector'] = [f"{';'.join([str(x) for x in dump_translation])}
 if os.getenv('LOCAL_DATASETS'):
     pred_df.to_csv(CUSTOM_PATH/'test_gt.csv', index=False)
     sub_df.to_csv(CUSTOM_PATH/'sample_submission.csv', index=False)
+    print('Saving to: ', CUSTOM_PATH, '...\n')
 else:
     pred_df.to_csv(WORKING_PATH/'test_gt.csv', index=False)
     sub_df.to_csv(WORKING_PATH/'sample_submission.csv', index=False)
+    print('Saving to: ', WORKING_PATH, '...\n')
